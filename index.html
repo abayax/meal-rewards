@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <title>Meal Treasure</title>
+  <meta name="theme-color" content="#2b1d5c">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Meal Treasure">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon-180.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="game">
+    <header id="top">
+      <div id="title"><span id="greeting">Treasure Meal</span></div>
+      <div id="timer">
+        <span id="clock">⏰ 20:00</span>
+        <div id="bar"><div id="bar-fill"></div></div>
+      </div>
+    </header>
+
+    <main id="board"><!-- tiles are built by app.js --></main>
+
+    <footer id="controls">
+      <button id="btn-start" class="big">▶ Start</button>
+      <button id="btn-settings" class="small" aria-label="Settings">⚙️</button>
+      <button id="btn-reset" class="small" aria-label="New meal">↺</button>
+    </footer>
+  </div>
+
+  <!-- Hint toast -->
+  <div id="toast" hidden></div>
+
+  <!-- All done -->
+  <div id="win" class="overlay" hidden>
+    <div class="card">
+      <div class="big-emoji bounce">🏆</div>
+      <h1 id="win-title">You did it!</h1>
+      <p id="win-sub">All the treasures are yours!</p>
+      <button id="btn-win-ok" class="big">Yay! 🎉</button>
+    </div>
+  </div>
+
+  <!-- Time's up -->
+  <div id="timeup" class="overlay" hidden>
+    <div class="card gloomy">
+      <div class="big-emoji sway">🌧️</div>
+      <h1>Oh no, time's up!</h1>
+      <p>Let's try a little more!</p>
+      <div class="row">
+        <button class="big" data-extend="2">+2 min</button>
+        <button class="big" data-extend="5">+5 min</button>
+      </div>
+      <button id="btn-end" class="plain">End meal</button>
+    </div>
+  </div>
+
+  <!-- Settings (for parents) -->
+  <dialog id="settings">
+    <form method="dialog">
+      <h2>⚙️ Settings</h2>
+      <label class="field">Kid's name
+        <input id="set-name" type="text" maxlength="20" placeholder="(optional)" autocomplete="off">
+      </label>
+      <h3>Target bites</h3>
+      <div id="set-targets"><!-- built by app.js --></div>
+      <h3>Timer</h3>
+      <div id="set-minutes" class="chips"><!-- built by app.js --></div>
+      <label class="field inline">Custom minutes
+        <input id="set-custom" type="number" min="1" max="120" inputmode="numeric">
+      </label>
+      <label class="field inline check">
+        <input id="set-warn" type="checkbox"> “5 minutes left” warning
+      </label>
+      <label class="field inline check">
+        <input id="set-sound" type="checkbox"> Sounds on
+      </label>
+      <p class="note">On iPhone, if you hear nothing, check the silent switch and volume.</p>
+      <button class="big" value="close">Done</button>
+    </form>
+  </dialog>
+
+  <canvas id="fx"></canvas>
+
+  <script src="sounds.js"></script>
+  <script src="effects.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
