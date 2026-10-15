@@ -38,6 +38,9 @@
       remaining: 0,
       total: 0,
       warned: false,
+      startedAt: 0,
+      extraMin: 0,
+      recorded: false,
     };
   }
 
@@ -223,15 +226,17 @@
     const g = G();
     g.remaining = Math.max(0, g.endTime - Date.now());
     g.status = 'won';
-    save();
+    recordMeal('won');
     releaseWakeLock();
     renderAll();
 
     const name = S().name.trim();
+    const streak = MealHistory.streaks().current;
     $('#win-title').textContent = name ? `You did it, ${name}!` : 'You did it!';
-    $('#win-sub').textContent = g.remaining > 0
+    $('#win-sub').textContent = (g.remaining > 0
       ? `All treasures collected with ${fmt(g.remaining)} to spare!`
-      : 'All the treasures are yours!';
+      : 'All the treasures are yours!')
+      + (streak >= 2 ? ` 🔥 ${streak} finished meals in a row!` : '');
     setTimeout(() => {
       if (G().status !== 'won') return;
       $('#win').hidden = false;
@@ -303,6 +308,7 @@
     g.status = 'playing';
     g.endTime = Date.now() + add;
     g.total += add;
+    g.extraMin += minutes;
     save();
     Sounds.start();
     requestWakeLock();
@@ -320,6 +326,8 @@
         g.total = S().minutes * 60000;
         g.endTime = Date.now() + g.total;
         g.warned = false;
+        g.startedAt = Date.now();
+        g.extraMin = 0;
         Sounds.start();
         requestWakeLock();
         break;
@@ -352,6 +360,9 @@
   });
 
   function newMeal() {
+    const s = G().status;
+    if (s === 'timeup') recordMeal('timeup');
+    else if (s === 'playing' || s === 'paused') recordMeal('ended');
     Sounds.stopRing();
     Effects.stopRain();
     gameEl.classList.remove('gloomy');
@@ -377,6 +388,7 @@
     Effects.stopRain();
     gameEl.classList.remove('gloomy');
     $('#timeup').hidden = true;
+    recordMeal('timeup');
     G().status = 'ended';
     G().remaining = 0;
     save();
@@ -398,7 +410,41 @@
   function renderGreeting() {
     const name = S().name.trim();
     $('#greeting').textContent = name ? `${name}'s Treasure Meal` : 'Treasure Meal';
+    const streak = MealHistory.streaks().current;
+    const chip = $('#streak');
+    chip.hidden = streak < 2;
+    chip.textContent = `🔥 ${streak}`;
+    chip.title = `${streak} finished meals in a row`;
   }
+
+  // ---------- History ----------
+  // Save the current meal to history (once). Meals stopped with no bites are skipped.
+  function recordMeal(result) {
+    const g = G();
+    if (g.recorded || !g.startedAt) return;
+    const bites = Object.values(g.counts).reduce((a, b) => a + b, 0);
+    if (result === 'ended' && bites === 0) return;
+    const left = result === 'timeup' ? 0
+      : g.status === 'playing' ? Math.max(0, g.endTime - Date.now())
+      : g.remaining;
+    const foods = {};
+    for (const c of activeCats()) foods[c.key] = [g.counts[c.key], S().targets[c.key]];
+    MealHistory.add({
+      id: g.startedAt,
+      start: g.startedAt,
+      end: Date.now(),
+      eatSec: Math.round(Math.max(0, g.total - left) / 1000),
+      plannedMin: Math.round((g.total / 60000) - g.extraMin),
+      extraMin: g.extraMin,
+      result,
+      foods,
+    });
+    g.recorded = true;
+    save();
+  }
+
+  $('#btn-history').addEventListener('click', () => MealHistory.open());
+  $('#history').addEventListener('close', renderGreeting);
 
   function renderAll() {
     renderGreeting();
@@ -528,6 +574,7 @@
   });
 
   // ---------- Start up ----------
+  MealHistory.init(CATEGORIES);
   addEventListener('resize', () => renderAllTiles());
   Sounds.setEnabled(S().sound);
   buildBoard();

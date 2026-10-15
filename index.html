@@ -17,7 +17,7 @@
 <body>
   <div id="game">
     <header id="top">
-      <div id="title"><span id="greeting">Treasure Meal</span></div>
+      <div id="title"><span id="greeting">Treasure Meal</span> <span id="streak" hidden></span></div>
       <div id="timer">
         <span id="clock">⏰ 20:00</span>
         <div id="bar"><div id="bar-fill"></div></div>
@@ -28,6 +28,7 @@
 
     <footer id="controls">
       <button id="btn-start" class="big">▶ Start</button>
+      <button id="btn-history" class="small" aria-label="History">📜</button>
       <button id="btn-settings" class="small" aria-label="Settings">⚙️</button>
       <button id="btn-reset" class="small" aria-label="New meal">↺</button>
     </footer>
@@ -85,10 +86,36 @@
     </form>
   </dialog>
 
+  <!-- History -->
+  <dialog id="history">
+    <div class="hist-head">
+      <h2>📜 Meal History</h2>
+      <button id="hist-close" class="x" aria-label="Close">✕</button>
+    </div>
+    <div class="hist-body">
+      <div class="week-nav">
+        <button id="hist-prev" aria-label="Previous week">‹</button>
+        <span id="hist-week">This week</span>
+        <button id="hist-next" aria-label="Next week">›</button>
+      </div>
+      <div id="hist-summary"></div>
+      <div id="hist-chart"></div>
+      <div id="hist-list"></div>
+      <div class="hist-backup">
+        <button id="hist-export" type="button">⬆️ Export backup</button>
+        <button id="hist-import" type="button">⬇️ Import</button>
+        <input id="hist-file" type="file" accept=".json,application/json" hidden>
+        <p class="note">History is saved on this device only. Export now and then to keep a backup
+          (or to copy it to another device with Import).</p>
+      </div>
+    </div>
+  </dialog>
+
   <canvas id="fx"></canvas>
 
   <script src="sounds.js"></script>
   <script src="effects.js"></script>
+  <script src="history.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
