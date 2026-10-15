@@ -319,7 +319,7 @@ dialog#history[open] { display: flex; flex-direction: column; }
 .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: middle; }
 
 #hist-list h4 { margin: 18px 0 6px; color: #6b6585; font-size: .9rem; text-transform: uppercase; letter-spacing: .04em; }
-.meal { background: #faf9ff; border: 1px solid #eeeaf8; border-radius: 14px; padding: 10px 12px; margin-bottom: 8px; cursor: pointer; }
+.meal { background: #faf9ff; border: 1px solid #eeeaf8; border-radius: 14px; padding: 10px 12px; margin-bottom: 8px; }
 .meal.flash { animation: flash 1.2s; }
 @keyframes flash { 0%, 60% { background: #fff2b3; } 100% { background: #faf9ff; } }
 .meal-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-weight: 800; }
@@ -329,11 +329,11 @@ dialog#history[open] { display: flex; flex-direction: column; }
 .meal-dur small { font-weight: 600; color: #6b6585; }
 .meal-foods { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 6px; font-weight: 700; color: #6b6585; font-variant-numeric: tabular-nums; }
 .meal-foods .hit { color: #1f7a42; }
-.meal-actions { display: none; margin-top: 8px; }
-.meal.open .meal-actions { display: block; }
-.del { background: #ffe9ec; color: #b4233f; border-radius: 10px; padding: 6px 12px; font-weight: 800; }
+.del { width: 40px; height: 40px; flex: none; border-radius: 50%; background: #ffe9ec; font-size: 1.1rem; }
+.del:active { background: #ffc9d1; }
 .empty { text-align: center; color: #6b6585; font-weight: 700; margin: 24px 0; line-height: 1.6; }
 
 .hist-backup { margin-top: 22px; padding-top: 14px; border-top: 1px solid #eee; display: flex; flex-wrap: wrap; gap: 10px; }
 .hist-backup button { background: #efeaff; color: #2b1d5c; border-radius: 12px; padding: 10px 14px; font-weight: 800; }
 .hist-backup .note { flex-basis: 100%; }
+.hist-backup button.danger { background: #ffe9ec; color: #b4233f; margin-left: auto; }

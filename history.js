@@ -179,18 +179,18 @@ const MealHistory = (() => {
             <span class="meal-time">${fmtTime(m.start)}</span>
             <span class="meal-result" style="--rc:${r.color}">${r.icon} ${r.label}</span>
             <span class="meal-dur">⏱ ${fmtDur(m.eatSec)} <small>of ${m.plannedMin}${extra} min</small></span>
+            <button type="button" class="del" aria-label="Delete this meal">🗑</button>
           </div>
           <div class="meal-foods">${foods}</div>
-          <div class="meal-actions"><button type="button" class="del">🗑 Delete this meal</button></div>
         </div>`;
     }
     list.innerHTML = html;
 
     list.querySelectorAll('.meal').forEach(el => {
-      el.addEventListener('click', () => el.classList.toggle('open'));
-      el.querySelector('.del').addEventListener('click', e => {
-        e.stopPropagation();
-        if (confirm('Delete this meal from history?')) { remove(Number(el.dataset.id)); render(); }
+      el.querySelector('.del').addEventListener('click', () => {
+        const start = Number(el.dataset.id);
+        const when = `${new Date(start).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}, ${fmtTime(start)}`;
+        if (confirm(`Delete the meal from ${when}?`)) { remove(start); render(); }
       });
     });
   }
@@ -236,6 +236,14 @@ const MealHistory = (() => {
     $('#hist-next').addEventListener('click', () => { weekOffset = Math.min(0, weekOffset + 1); render(); });
     $('#hist-export').addEventListener('click', exportFile);
     $('#hist-import').addEventListener('click', () => $('#hist-file').click());
+    $('#hist-clear').addEventListener('click', () => {
+      const n = all().length;
+      if (!n) { alert('History is already empty.'); return; }
+      if (confirm(`Delete ALL ${n} meal${n === 1 ? '' : 's'} from history on this device?\n\nTip: tap Cancel and Export a backup first if you might want them later.`)) {
+        store([]);
+        render();
+      }
+    });
     $('#hist-file').addEventListener('change', e => {
       if (e.target.files[0]) importFile(e.target.files[0]);
       e.target.value = '';
