@@ -7,6 +7,8 @@ everything is done, and a gentle rain if the timer runs out (with +2 / +5 minute
 Plain HTML/CSS/JS, no build step. Hosted with GitHub Pages.
 
 - **Play:** set targets and timer in ⚙️, press **Start**, tap a tile per bite. Use **−** to undo a mistaken tap.
+- **Treasures:** in ⚙️ pick an emoji treasure for each food, or *Use my own picture* (resized and kept on
+  that device only, never uploaded). Export backup includes treasure choices and pictures.
 - **History:** 📜 shows each meal (time, eating time, bites per food, result), a weekly summary with a
   minutes chart, and the finished-meal streak 🔥. Saved on each device; use *Export backup* / *Import* to back up or copy.
 - **iPhone/iPad:** open in Safari → Share → *Add to Home Screen* for a full-screen app.

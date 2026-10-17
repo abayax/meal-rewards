@@ -345,3 +345,34 @@ dialog#history[open] { display: flex; flex-direction: column; }
 .hist-backup button { background: #efeaff; color: #2b1d5c; border-radius: 12px; padding: 10px 14px; font-weight: 800; }
 .hist-backup .note { flex-basis: 100%; }
 .hist-backup button.danger { background: #ffe9ec; color: #b4233f; margin-left: auto; }
+
+/* ---------- Picture treasures ---------- */
+.gem img, .flyer img {
+  display: block;
+  width: 1em;
+  height: 1em;
+  object-fit: contain;
+  border-radius: 22%;
+  pointer-events: none;
+  -webkit-user-drag: none;
+}
+.gem.empty img { opacity: .45; filter: grayscale(1) brightness(1.6); }
+
+/* ---------- Treasure picker (settings) ---------- */
+.tp { border: 1px solid #eeeaf8; border-radius: 14px; padding: 6px 10px; }
+.tp-head { display: flex; align-items: center; justify-content: space-between; font-weight: 800; font-size: 1.05rem; }
+.tp-current { display: flex; align-items: center; gap: 8px; background: #efeaff; color: #2b1d5c; border-radius: 99px; padding: 4px 12px 4px 6px; font-weight: 800; font-size: .9rem; }
+.tp-preview { font-size: 1.6rem; line-height: 1; display: flex; }
+.tp-preview img { width: 1.6rem; height: 1.6rem; object-fit: contain; border-radius: 22%; }
+.tp-body { display: none; padding: 8px 0 4px; }
+.tp.open .tp-body { display: block; }
+.tp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(44px, 1fr)); gap: 6px; }
+.tp-chip { height: 44px; border-radius: 12px; background: #f6f3ff; font-size: 1.6rem; line-height: 1; padding: 0; display: flex; align-items: center; justify-content: center; }
+.tp-chip.on { background: #6a4cff; box-shadow: 0 0 0 3px #b9a8ff; }
+.tp-chip img { width: 34px; height: 34px; object-fit: contain; border-radius: 22%; }
+.tp-photo-wrap { position: relative; display: grid; }
+.tp-remove { position: absolute; top: -6px; right: -6px; width: 22px; height: 22px; border-radius: 50%; background: #b4233f; color: #fff; font-size: .7rem; font-weight: 900; line-height: 1; }
+.tp-upload { margin-top: 8px; width: 100%; padding: 10px; border-radius: 12px; background: #efeaff; color: #2b1d5c; font-weight: 800; }
+#set-treasures { display: flex; flex-direction: column; gap: 6px; }
+
+#settings { overflow-y: auto; -webkit-overflow-scrolling: touch; }

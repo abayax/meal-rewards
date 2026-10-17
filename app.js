@@ -109,10 +109,11 @@
     const slots = Math.max(count, target);
     const pile = tile.querySelector('.pile');
 
+    const gemHTML = Treasures.html(c.key);
     let html = '';
     for (let i = 0; i < slots; i++) {
       const cls = i >= count ? 'empty' : i >= count - flying ? 'hidden' : i === landedIndex ? 'landed' : '';
-      html += `<span class="gem ${cls}">${c.gem}</span>`;
+      html += `<span class="gem ${cls}">${gemHTML}</span>`;
     }
     pile.innerHTML = html;
     pile.style.setProperty('--gem', fitGemSize(pile, slots) + 'px');
@@ -186,7 +187,7 @@
   function flyTreasure(c, x, y, slot, onLand) {
     const el = document.createElement('div');
     el.className = 'flyer';
-    el.textContent = c.gem;
+    el.innerHTML = Treasures.html(c.key);
     const size = slot ? parseFloat(getComputedStyle(slot).fontSize) : 40;
     el.style.fontSize = size + 'px';
     document.body.appendChild(el);
@@ -533,6 +534,8 @@
       targets.appendChild(row);
     }
     renderMinuteChips();
+    Treasures.resetPicker();
+    Treasures.buildPicker($('#set-treasures'), renderAllTiles);
   }
 
   function renderMinuteChips() {
@@ -588,7 +591,15 @@
   });
 
   // ---------- Start up ----------
-  MealHistory.init(CATEGORIES);
+  Treasures.init(CATEGORIES);
+  MealHistory.init(CATEGORIES, {
+    exportExtra: () => ({ treasures: Treasures.exportData() }),
+    importExtra: data => {
+      if (!data.treasures) return;
+      if (confirm('This backup also has treasure choices (and any pictures). Use them on this device?')
+          && Treasures.importData(data.treasures)) renderAllTiles();
+    },
+  });
   addEventListener('resize', () => renderAllTiles());
   Sounds.setEnabled(S().sound);
   buildBoard();

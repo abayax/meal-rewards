@@ -9,6 +9,7 @@ const MealHistory = (() => {
   };
 
   let categories = [];
+  let hooks = {};
   let weekOffset = 0; // 0 = this week, -1 = last week, ...
   const $ = sel => document.querySelector(sel);
 
@@ -197,7 +198,8 @@ const MealHistory = (() => {
 
   // ---------- Export / import ----------
   async function exportFile() {
-    const data = JSON.stringify({ app: 'meal-treasure', version: 1, exported: new Date().toISOString(), meals: all() }, null, 1);
+    const extra = hooks.exportExtra ? hooks.exportExtra() : {};
+    const data = JSON.stringify({ app: 'meal-treasure', version: 1, exported: new Date().toISOString(), meals: all(), ...extra });
     const name = `meal-history-${new Date().toISOString().slice(0, 10)}.json`;
     const file = new File([data], name, { type: 'application/json' });
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
@@ -224,13 +226,15 @@ const MealHistory = (() => {
       alert(`Imported ${fresh.length} meal${fresh.length === 1 ? '' : 's'}` +
             (incoming.length > fresh.length ? ` (${incoming.length - fresh.length} already here).` : '.'));
       render();
+      if (hooks.importExtra && !Array.isArray(data)) hooks.importExtra(data);
     } catch (e) {
       alert("Sorry, that file doesn't look like a meal history export.");
     }
   }
 
-  function init(cats) {
+  function init(cats, extraHooks = {}) {
     categories = cats;
+    hooks = extraHooks;
     $('#hist-close').addEventListener('click', () => $('#history').close());
     $('#hist-prev').addEventListener('click', () => { weekOffset--; render(); });
     $('#hist-next').addEventListener('click', () => { weekOffset = Math.min(0, weekOffset + 1); render(); });
