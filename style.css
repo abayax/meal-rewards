@@ -105,19 +105,27 @@ button {
   display: flex;
   flex-wrap: wrap-reverse;
   justify-content: center;
-  align-content: flex-start;
-  gap: .4vmin;
+  align-content: center;
+  align-items: center;
+  gap: 4px;
   padding: 1vmin 0;
   overflow: hidden;
 }
+/* Each treasure sits in a fixed square box with the emoji centered inside it.
+   (No CSS filter here: Safari draws filtered emoji shifted upward, which got them clipped.) */
 .gem {
+  flex: none;
   font-size: var(--gem, 2.4rem);
-  line-height: 1.1;
-  width: 1.15em;
-  text-align: center;
-  filter: drop-shadow(0 .3vmin .2vmin rgba(0,0,0,.35));
+  width: 1.2em;
+  height: 1.2em;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-shadow: 0 .06em .06em rgba(0,0,0,.35);
 }
-.gem.empty { opacity: .35; filter: grayscale(1) brightness(1.6); transform: scale(.75); }
+/* Empty slot: a pale silhouette of the treasure (shadow-only trick, no filter). */
+.gem.empty { color: transparent; text-shadow: 0 0 0 rgba(255,255,255,.45); transform: scale(.8); }
 .gem.hidden { visibility: hidden; }
 .gem.landed { animation: land .35s ease-out; }
 
@@ -134,7 +142,7 @@ button {
   z-index: 50;
   pointer-events: none;
   line-height: 1;
-  filter: drop-shadow(0 .4vmin .3vmin rgba(0,0,0,.4));
+  text-shadow: 0 .06em .08em rgba(0,0,0,.4);
 }
 
 /* ---------- Footer ---------- */
@@ -242,7 +250,7 @@ dialog .big { font-size: 1.3rem; padding: 10px; margin-top: 8px; }
 /* ---------- Animations ---------- */
 @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
 @keyframes pop { 0% { transform: scale(.3); opacity: 0; } 70% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(1); } }
-@keyframes land { 0% { transform: scale(1.6); } 60% { transform: scale(.85); } 100% { transform: scale(1); } }
+@keyframes land { 0% { transform: scale(1.35); } 60% { transform: scale(.85); } 100% { transform: scale(1); } }
 @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-2vmin); } 75% { transform: translateX(2vmin); } }
 .bounce { animation: bounce 1s ease-in-out infinite; }
 @keyframes bounce { 0%, 100% { transform: translateY(0) rotate(-6deg); } 50% { transform: translateY(-3vmin) rotate(6deg); } }

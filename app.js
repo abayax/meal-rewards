@@ -123,18 +123,32 @@
     tile.querySelector('.undo').hidden = !(count > 0 && ['playing', 'paused'].includes(G().status));
   }
 
-  // Largest gem size so that n gems fit inside the pile box.
+  // Largest gem size so that n gems fit inside the pile box. Starts from an estimate,
+  // then checks the real layout and shrinks until every gem is fully inside.
   function fitGemSize(pile, n) {
     const w = pile.clientWidth;
-    const h = pile.clientHeight * 0.92;
-    if (!n || !w || !h) return 32;
+    const h = pile.clientHeight - 8;
+    if (!n || !w || h <= 0) return 32;
     const gap = 4;
-    for (let s = Math.min(96, h / 1.1); s > 10; s -= 1) {
-      const cols = Math.max(1, Math.floor((w + gap) / (s * 1.15 + gap)));
-      const rows = Math.ceil(n / cols);
-      if (rows * (s * 1.1 + gap) <= h) return Math.floor(s);
+    let size = 10;
+    for (let s = Math.min(96, h / 1.2); s > 10; s -= 1) {
+      const cols = Math.max(1, Math.floor((w + gap) / (s * 1.2 + gap)));
+      if (Math.ceil(n / cols) * (s * 1.2 + gap) - gap <= h) { size = Math.floor(s); break; }
     }
-    return 10;
+    const gems = pile.children;
+    // Layout offsets (not screen rects) so animations and tap-scaling don't skew the check.
+    // With wrap-reverse, the first gem is in the bottom row and the last gem in the top row.
+    const fits = () => {
+      const top = pile.offsetTop, bottom = top + pile.offsetHeight;
+      return [gems[0], gems[gems.length - 1]].every(g =>
+        g.offsetTop >= top - 0.5 && g.offsetTop + g.offsetHeight <= bottom + 0.5);
+    };
+    pile.style.setProperty('--gem', size + 'px');
+    while (size > 10 && !fits()) {
+      size -= 2;
+      pile.style.setProperty('--gem', size + 'px');
+    }
+    return size;
   }
 
   // ---------- Tapping ----------
