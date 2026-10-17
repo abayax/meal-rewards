@@ -241,17 +241,35 @@
     const g = G();
     g.remaining = Math.max(0, g.endTime - Date.now());
     g.status = 'won';
-    recordMeal('won');
+    const meal = recordMeal('won');
     releaseWakeLock();
     renderAll();
 
     const name = S().name.trim();
-    const streak = MealHistory.streaks().current;
+    const streak = meal && meal.streak || 0;
+    const spare = g.remaining > 0 ? fmt(g.remaining) : '';
+
+    if (meal && meal.chest) {
+      setTimeout(() => {
+        if (G().status !== 'won') return;
+        Chest.show({
+          level: meal.chest, streak, name, spare,
+          treasures: activeCats().map(c => Treasures.html(c.key)),
+        });
+      }, 700);
+      return;
+    }
+
+    let streakLine = '';
+    if (streak >= 2) streakLine = ` 🔥 ${streak} great meals in a row!`;
+    if (streak >= 1) {
+      const left = MealHistory.nextChest(streak) - streak;
+      streakLine += ` ${left} more for a treasure chest! 🎁`;
+    }
     $('#win-title').textContent = name ? `You did it, ${name}!` : 'You did it!';
-    $('#win-sub').textContent = (g.remaining > 0
-      ? `All treasures collected with ${fmt(g.remaining)} to spare!`
-      : 'All the treasures are yours!')
-      + (streak >= 2 ? ` 🔥 ${streak} finished meals in a row!` : '');
+    $('#win-sub').textContent = (spare
+      ? `All treasures collected with ${spare} to spare!`
+      : 'All the treasures are yours!') + streakLine;
     setTimeout(() => {
       if (G().status !== 'won') return;
       $('#win').hidden = false;
@@ -429,22 +447,22 @@
     const chip = $('#streak');
     chip.hidden = streak < 2;
     chip.textContent = `🔥 ${streak}`;
-    chip.title = `${streak} finished meals in a row`;
+    chip.title = `${streak} great meals in a row`;
   }
 
   // ---------- History ----------
   // Save the current meal to history (once). Meals stopped with no bites are skipped.
   function recordMeal(result) {
     const g = G();
-    if (g.recorded || !g.startedAt) return;
+    if (g.recorded || !g.startedAt) return null;
     const bites = Object.values(g.counts).reduce((a, b) => a + b, 0);
-    if (result === 'ended' && bites === 0) return;
+    if (result === 'ended' && bites === 0) return null;
     const left = result === 'timeup' ? 0
       : g.status === 'playing' ? Math.max(0, g.endTime - Date.now())
       : g.remaining;
     const foods = {};
     for (const c of activeCats()) foods[c.key] = [g.counts[c.key], S().targets[c.key]];
-    MealHistory.add({
+    const meal = MealHistory.add({
       id: g.startedAt,
       start: g.startedAt,
       end: Date.now(),
@@ -456,6 +474,7 @@
     });
     g.recorded = true;
     save();
+    return meal;
   }
 
   $('#btn-history').addEventListener('click', () => MealHistory.open());
@@ -578,6 +597,17 @@
     buildBoard();
   }
 
+  // Let parents see the chest celebrations without earning them (nothing is saved).
+  document.querySelectorAll('[data-preview]').forEach(b => b.addEventListener('click', () => {
+    Sounds.unlock();
+    dialog.close();
+    const n = Number(b.dataset.preview);
+    Chest.show({
+      level: n === 7 ? 'big' : 'medium', streak: n, name: S().name.trim(), spare: '',
+      treasures: activeCats().map(c => Treasures.html(c.key)),
+    });
+  }));
+
   dialog.addEventListener('close', () => {
     // Lowered targets may have just completed a category (or the whole meal).
     if (G().status === 'playing') {
@@ -591,7 +621,9 @@
   });
 
   // ---------- Start up ----------
+  Cropper.init();
   Treasures.init(CATEGORIES);
+  Chest.init();
   MealHistory.init(CATEGORIES, {
     exportExtra: () => ({ treasures: Treasures.exportData() }),
     importExtra: data => {

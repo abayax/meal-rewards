@@ -69,6 +69,27 @@ const Sounds = (() => {
       [1.9, 2.2, 2.5, 2.8].forEach(t => tone(150, t, 0.3, { type: 'triangle', vol: 0.3, slideTo: 40 }));
     },
 
+    // Creaky lid, then a sparkly shower.
+    chestOpen() {
+      tone(110, 0, 0.35, { type: 'sawtooth', vol: 0.08, slideTo: 180 });
+      tone(160, 0.2, 0.25, { type: 'sawtooth', vol: 0.06, slideTo: 120 });
+      [N.C6, N.E6, N.G6, N.C6 * 2, N.G6, N.C6 * 2].forEach((f, i) => tone(f, 0.35 + i * 0.06, 0.3, { vol: 0.12 }));
+    },
+
+    // Longer "whole week" fanfare.
+    bigFanfare() {
+      const seq = [
+        [N.G5 / 2, 0, 0.12], [N.C5, 0.12, 0.12], [N.E5, 0.24, 0.12], [N.G5, 0.36, 0.3],
+        [N.E5, 0.7, 0.12], [N.G5, 0.82, 0.5],
+        [N.A5, 1.4, 0.15], [N.B5, 1.55, 0.15], [N.C6, 1.7, 0.3], [N.G5, 2.05, 0.15], [N.C6, 2.2, 0.15], [N.E6, 2.35, 1.0],
+      ];
+      seq.forEach(([f, t, d]) => {
+        tone(f, t, d + 0.1, { type: 'triangle', vol: 0.25 });
+        tone(f / 2, t, d + 0.1, { type: 'sine', vol: 0.15 });
+      });
+      [3.4, 3.7, 4.0, 4.3, 4.6].forEach(t => tone(150, t, 0.3, { type: 'triangle', vol: 0.3, slideTo: 40 }));
+    },
+
     start() {
       [N.C5, N.E5, N.G5].forEach((f, i) => tone(f, i * 0.1, 0.2, { type: 'triangle', vol: 0.2 }));
     },

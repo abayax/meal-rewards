@@ -47,6 +47,24 @@
     </div>
   </div>
 
+  <!-- Streak treasure chest -->
+  <div id="chest" class="overlay chest-overlay" hidden>
+    <div class="chest-stage">
+      <div id="chest-title" class="chest-title"></div>
+      <div class="chest-wrap">
+        <div class="chest-rays"></div>
+        <div id="chest-box" role="button" aria-label="Open the treasure chest"></div>
+      </div>
+      <button id="chest-hint" class="chest-hint">👆 Tap the chest to open it!</button>
+      <div id="chest-msg" class="card" hidden>
+        <h1 id="chest-msg-title"></h1>
+        <p id="chest-msg-sub"></p>
+        <p id="chest-msg-spare" class="spare"></p>
+        <button id="chest-ok" class="big">Yay! 🎉</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Time's up -->
   <div id="timeup" class="overlay" hidden>
     <div class="card gloomy">
@@ -85,8 +103,32 @@
         <input id="set-sound" type="checkbox"> Sounds on
       </label>
       <p class="note">On iPhone, if you hear nothing, check the silent switch and volume.</p>
+      <h3>Preview streak rewards</h3>
+      <div class="chips">
+        <button type="button" data-preview="3">🎁 3 in a row</button>
+        <button type="button" data-preview="7">👑 7 in a row</button>
+      </div>
       <button class="big" value="close">Done</button>
     </form>
+  </dialog>
+
+  <!-- Picture cropper -->
+  <dialog id="cropper">
+    <div class="crop-body">
+      <h2>✂️ Crop your picture</h2>
+      <p class="note">Pinch or drag to zoom and move (on a computer: scroll and drag).
+        Whatever is inside the square becomes the treasure.</p>
+      <div id="crop-frame" class="crop-frame"><canvas id="crop-src"></canvas></div>
+      <div class="crop-zoom">
+        <button type="button" id="crop-zoom-out" aria-label="Zoom out">➖</button>
+        <input id="crop-zoom" type="range" min="0" max="1" step="0.001" aria-label="Zoom">
+        <button type="button" id="crop-zoom-in" aria-label="Zoom in">➕</button>
+      </div>
+      <div class="crop-actions">
+        <button type="button" id="crop-cancel" class="plain">Cancel</button>
+        <button type="button" id="crop-ok" class="big">Use this</button>
+      </div>
+    </div>
   </dialog>
 
   <!-- History -->
@@ -120,7 +162,9 @@
   <script src="sounds.js"></script>
   <script src="effects.js"></script>
   <script src="history.js"></script>
+  <script src="cropper.js"></script>
   <script src="treasures.js"></script>
+  <script src="chest.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

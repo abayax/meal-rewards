@@ -12,15 +12,15 @@ const Treasures = (() => {
   ];
 
   let categories = [];
-  let data = load(); // { choice: { carbs: '🪙' | 'photo' }, photos: { carbs: 'data:image/png;base64,...' } }
+  let data = load(); // { choice: { carbs: '🪙' | 'photo' }, photos: { carbs: 'data:...' }, recent: ['🐉', ...] }
   let openKey = null;
 
   function load() {
     try {
       const d = JSON.parse(localStorage.getItem(KEY));
-      if (d) return { choice: d.choice || {}, photos: d.photos || {} };
+      if (d) return { choice: d.choice || {}, photos: d.photos || {}, recent: d.recent || [] };
     } catch (e) {}
-    return { choice: {}, photos: {} };
+    return { choice: {}, photos: {}, recent: [] };
   }
   function save() {
     try { localStorage.setItem(KEY, JSON.stringify(data)); return true; }
@@ -34,10 +34,21 @@ const Treasures = (() => {
     return { emoji: ch && ch !== PHOTO ? ch : defaultOf(key) };
   }
 
+  const esc = s => s.replace(/[&<>"']/g, ch => `&#${ch.charCodeAt(0)};`);
+
   // Markup for one treasure (used in piles and for the flying treasure).
   function html(key) {
     const t = current(key);
-    return t.photo ? `<img src="${t.photo}" alt="" draggable="false">` : t.emoji;
+    return t.photo ? `<img src="${t.photo}" alt="" draggable="false">` : esc(t.emoji);
+  }
+
+  // First emoji (or, failing that, first visible character) of whatever was typed/pasted.
+  function firstSymbol(text) {
+    const parts = typeof Intl !== 'undefined' && Intl.Segmenter
+      ? [...new Intl.Segmenter(undefined, { granularity: 'grapheme' }).segment(text)].map(s => s.segment)
+      : Array.from(text);
+    const visible = parts.filter(p => p.trim());
+    return visible.find(p => /\p{Extended_Pictographic}|\p{Regional_Indicator}|\u20E3/u.test(p)) || visible[0] || '';
   }
 
   // ---------- Resizing a picked picture ----------
@@ -51,17 +62,10 @@ const Treasures = (() => {
     });
   }
 
+  // Let the parent zoom/pan the picture in a square; whatever is inside the square is kept.
   async function toSmallPicture(file) {
     const img = await loadImage(file);
-    const canvas = document.createElement('canvas');
-    canvas.width = canvas.height = PHOTO_PX;
-    const g = canvas.getContext('2d');
-    // Fit the whole picture inside the square (keeps transparent backgrounds).
-    const scale = Math.min(PHOTO_PX / img.naturalWidth, PHOTO_PX / img.naturalHeight);
-    const w = img.naturalWidth * scale, h = img.naturalHeight * scale;
-    g.imageSmoothingQuality = 'high';
-    g.drawImage(img, (PHOTO_PX - w) / 2, (PHOTO_PX - h) / 2, w, h);
-    return canvas.toDataURL('image/png');
+    return Cropper.crop(img, PHOTO_PX);
   }
 
   // ---------- Settings picker ----------
@@ -72,8 +76,10 @@ const Treasures = (() => {
       const row = document.createElement('div');
       row.className = 'tp' + (openKey === c.key ? ' open' : '');
       const photo = data.photos[c.key];
-      const chips = CHOICES.map(e =>
-        `<button type="button" class="tp-chip${t.emoji === e ? ' on' : ''}" data-emoji="${e}">${e}</button>`).join('');
+      const list = [...data.recent.filter(e => !CHOICES.includes(e)), ...CHOICES];
+      if (t.emoji && !list.includes(t.emoji)) list.unshift(t.emoji);
+      const chips = list.map(e =>
+        `<button type="button" class="tp-chip${t.emoji === e ? ' on' : ''}" data-emoji="${esc(e)}">${esc(e)}</button>`).join('');
       row.innerHTML = `
         <div class="tp-head">
           <span>${c.emoji} ${c.label}</span>
@@ -85,6 +91,10 @@ const Treasures = (() => {
           <div class="tp-grid">
             ${photo ? `<span class="tp-photo-wrap"><button type="button" class="tp-chip tp-photo${t.photo ? ' on' : ''}" data-photo="1"><img src="${photo}" alt="My picture"></button><button type="button" class="tp-remove" aria-label="Remove my picture">✕</button></span>` : ''}
             ${chips}
+          </div>
+          <div class="tp-type">
+            <input type="text" class="tp-input" placeholder="Type any emoji 😀" autocomplete="off" enterkeyhint="done" aria-label="Type any emoji">
+            <button type="button" class="tp-use">Use</button>
           </div>
           <button type="button" class="tp-upload">📷 ${photo ? 'Use a different picture' : 'Use my own picture'}</button>
           <input type="file" accept="image/*" hidden>
@@ -100,6 +110,16 @@ const Treasures = (() => {
         buildPicker(container, onChange);
       });
       row.querySelectorAll('[data-emoji]').forEach(b => b.addEventListener('click', () => choose(b.dataset.emoji)));
+      const useTyped = () => {
+        const sym = firstSymbol(row.querySelector('.tp-input').value);
+        if (!sym) return;
+        data.recent = [sym, ...data.recent.filter(x => x !== sym)].slice(0, 12);
+        choose(sym);
+      };
+      row.querySelector('.tp-use').addEventListener('click', useTyped);
+      row.querySelector('.tp-input').addEventListener('keydown', e => {
+        if (e.key === 'Enter') { e.preventDefault(); useTyped(); } // don't submit/close Settings
+      });
       const photoBtn = row.querySelector('[data-photo]');
       if (photoBtn) photoBtn.addEventListener('click', () => choose(PHOTO));
       const removeBtn = row.querySelector('.tp-remove');
@@ -119,7 +139,9 @@ const Treasures = (() => {
         if (!file) return;
         try {
           const before = data.photos[c.key];
-          data.photos[c.key] = await toSmallPicture(file);
+          const picture = await toSmallPicture(file);
+          if (!picture) return; // cancelled
+          data.photos[c.key] = picture;
           data.choice[c.key] = PHOTO;
           if (!save()) { if (before) data.photos[c.key] = before; else delete data.photos[c.key]; }
           onChange();
@@ -142,10 +164,11 @@ const Treasures = (() => {
     }
     const choice = {};
     for (const [k, v] of Object.entries(d.choice || {})) {
-      if (typeof v === 'string' && v.length <= 16) choice[k] = v;
+      if (typeof v === 'string' && v.length <= 32) choice[k] = v;
     }
+    const recent = Array.isArray(d.recent) ? d.recent.filter(v => typeof v === 'string' && v.length <= 32).slice(0, 12) : [];
     const prev = data;
-    data = { choice, photos };
+    data = { choice, photos, recent };
     if (!save()) { data = prev; return false; }
     return true;
   }

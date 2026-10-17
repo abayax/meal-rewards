@@ -21,21 +21,47 @@ const MealHistory = (() => {
     meals.sort((a, b) => a.start - b.start);
     try { localStorage.setItem(KEY, JSON.stringify(meals)); } catch (e) {}
   }
+  // Saves a meal. If it is the newest meal and a great one, it also gets its streak
+  // count and any treasure chest earned (stored with the meal for the history list).
   function add(meal) {
     const meals = all().filter(m => m.id !== meal.id);
     meals.push(meal);
+    meals.sort((a, b) => a.start - b.start);
+    if (isGreat(meal) && meals[meals.length - 1] === meal) {
+      meal.streak = streaks(meals).current;
+      const chest = chestLevel(meal.streak);
+      if (chest) meal.chest = chest;
+    }
     store(meals);
+    return meal;
   }
   function remove(id) { store(all().filter(m => m.id !== id)); }
 
-  // Consecutive finished meals, counting back from the most recent.
+  // A great meal: every food finished before the timer ran out, with no extra time.
+  const isGreat = m => m.result === 'won' && !m.extraMin;
+
+  // Treasure chest for a streak: medium at 3 (and 10, 17, ...), big every full week (7, 14, ...).
+  function chestLevel(n) {
+    if (n >= 7 && n % 7 === 0) return 'big';
+    if (n === 3 || (n > 7 && n % 7 === 3)) return 'medium';
+    return null;
+  }
+
+  // The next streak length that earns a chest.
+  function nextChest(n) {
+    let k = n + 1;
+    while (!chestLevel(k)) k++;
+    return k;
+  }
+
+  // Consecutive great meals, counting back from the most recent.
   function streaks(meals = all()) {
     let current = 0, best = 0, run = 0;
     for (const m of meals) {
-      run = m.result === 'won' ? run + 1 : 0;
+      run = isGreat(m) ? run + 1 : 0;
       best = Math.max(best, run);
     }
-    for (let i = meals.length - 1; i >= 0 && meals[i].result === 'won'; i--) current++;
+    for (let i = meals.length - 1; i >= 0 && isGreat(meals[i]); i--) current++;
     return { current, best };
   }
 
@@ -82,6 +108,8 @@ const MealHistory = (() => {
 
   function renderSummary(week, prevWeek, meals) {
     const won = week.filter(m => m.result === 'won').length;
+    const great = week.filter(isGreat).length;
+    const chests = week.filter(m => m.chest).length;
     const avg = list => list.length ? list.reduce((s, m) => s + m.eatSec, 0) / list.length : 0;
     const avgSec = avg(week);
     const { current, best } = streaks(meals);
@@ -106,8 +134,10 @@ const MealHistory = (() => {
         <div class="stat"><div class="stat-num">${week.length ? Math.round(avgSec / 60) : '–'}</div><div class="stat-label">Avg minutes</div></div>
         <div class="stat"><div class="stat-num">🔥 ${current}</div><div class="stat-label">Streak now (best ${best})</div></div>
       </div>
+      <div class="compare">🌟 ${great} great meal${great === 1 ? '' : 's'}${chests ? ` · 🎁 ${chests} treasure chest${chests === 1 ? '' : 's'}` : ''}</div>
       <div class="treasure-row">${totals}</div>
-      ${compare ? `<div class="compare">${compare}</div>` : ''}`;
+      ${compare ? `<div class="compare">${compare}</div>` : ''}
+      <p class="note center">🌟 Great meal = all foods finished before the timer, no extra time. Great meals in a row make the 🔥 streak.</p>`;
   }
 
   function renderChart(week, start) {
@@ -178,11 +208,12 @@ const MealHistory = (() => {
         <div class="meal" data-id="${m.id}">
           <div class="meal-top">
             <span class="meal-time">${fmtTime(m.start)}</span>
-            <span class="meal-result" style="--rc:${r.color}">${r.icon} ${r.label}</span>
+            <span class="meal-result" style="--rc:${r.color}">${isGreat(m) ? '🌟 Great meal' : `${r.icon} ${r.label}${m.result === 'won' ? ' (extra time)' : ''}`}</span>
             <span class="meal-dur">⏱ ${fmtDur(m.eatSec)} <small>of ${m.plannedMin}${extra} min</small></span>
             <button type="button" class="del" aria-label="Delete this meal">🗑</button>
           </div>
           <div class="meal-foods">${foods}</div>
+          ${m.chest ? `<div class="meal-chest ${m.chest}">🎁 Treasure chest! ${m.streak} great meals in a row</div>` : ''}
         </div>`;
     }
     list.innerHTML = html;
@@ -256,5 +287,5 @@ const MealHistory = (() => {
     if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
   }
 
-  return { init, open, add, all, streaks };
+  return { init, open, add, all, streaks, isGreat, nextChest };
 })();
